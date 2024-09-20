@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Summarization</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .video-background {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            filter: brightness(50%);
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.17);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: auto; /* Center container horizontally */
+            display: grid; /* Center content vertically */
+            place-items: center;
+            height: 100vh;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            font-family: 'Roboto', sans-serif; /* Apply Roboto font to headings */
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        input[type="file"] {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: rgb(255, 255, 255);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        textarea {
+            width: 100%;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.17);
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            line-height: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #summary {
+            background-color: rgba(255, 255, 255, 0.17);
+            padding: 1rem;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: #218838;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .loading-circle {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <video autoplay muted loop style="
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1; 
+">
+        <source src="https://cdn.dribbble.com/userupload/16482532/file/original-e21a018c333544d2938b0a55d1db218f.mp4"
+            type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="container">
+        <h1>Video Summarization</h1>
+        <form id="processForm" enctype="multipart/form-data">
+            <input type="file" name="video" accept="video/*">
+            <button type="submit">Process Video</button>
+        </form>
+        <div class="loading">
+            <div class="loading-circle"></div>
+            <p>Processing video...</p>
+        </div>
+        <h2>Recognized Text:</h2>
+        <textarea id="recognizedText" rows="10"></textarea>
+        <button id="summarizeBtn">Summarize</button>
+        <h2>Summary:</h2>
+        <div id="summary"></div>
+        <button id="playSummaryBtn">Play Summary</button> <!-- New button for playing the summary -->
+        <button id="downloadSummaryBtn">Download Summary</button> <!-- Button to download summary -->
+        <a href="/" class="button">Back to Home</a>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $("#processForm").submit(function (event) {
+                event.preventDefault();
+                let formData = new FormData(this);
+                $(".loading").show();
+                $.ajax({
+                    url: "/process_video",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $(".loading").hide();
+                        alert(response.message);
+                        $.get("/get_recognized_text", function (data) {
+                            $("#recognizedText").val(data);
+                        });
+                    },
+                    error: function (error) {
+                        $(".loading").hide();
+                        alert("Error processing video: " + error.responseJSON.error);
+                    }
+                });
+            });
+
+            $("#summarizeBtn").click(function () {
+                $(".loading").show();
+                $.ajax({
+                    url: "/summarize_video",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ text: $("#recognizedText").val() }),
+                    success: function (response) {
+                        $(".loading").hide();
+                        $("#summary").text(response.summary);
+                    },
+                    error: function (error) {
+                        $(".loading").hide();
+                        alert("Error summarizing: " + error.responseJSON.error);
+                    }
+                });
+            });
+
+            // Add play summary feature
+            $("#playSummaryBtn").click(function () {
+                const summaryText = $("#summary").text();
+                if (summaryText) {
+                    const speech = new SpeechSynthesisUtterance(summaryText);
+                    speech.lang = 'hi-IN'; // You can change the language if needed
+                    window.speechSynthesis.speak(speech);
+                } else {
+                    alert("No summary available to play.");
+                }
+            });
+
+            // Add download summary feature
+            $("#downloadSummaryBtn").click(function () {
+                const summaryText = $("#summary").text();
+                if (summaryText) {
+                    const blob = new Blob([summaryText], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', 'video_summary.txt'); // Customize the download filename
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert("No summary available to download.");
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
