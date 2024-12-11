@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  
+
+  <style>
+    /* Global Styles */
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+  
+    h1, h2, h3, h4, h5, h6 {
+      color: #333;
+    }
+  
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  
+    /* Navigation Styles */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: white;
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+  
+    .logo img {
+      height: 40px;
+    }
+  
+    .menu {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+    }
+  
+    .menu li {
+      font-size: 16px;
+    }
+  
+    .menu li a {
+      color: #4158d0;;
+      font-weight: 600;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+  
+    .menu li a:hover {
+      color: #c850c0;
+    }
+  
+    /* Tab Styles */
+    .tab {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+  
+    .tablinks {
+      padding: 12px 20px;
+      background-color: #ddd;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+    }
+  
+    .tablinks.active {
+      background-color: #0084ff;
+      color: white;
+    }
+  
+    /* Content Styles */
+    .body-content {
+      padding: 30px;
+      margin-top: 50px;
+    }
+  
+    .tabcontent {
+      display: none;
+    }
+  
+    /* Chat Popup Styles */
+    .chat-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+  
+    .chat-button:hover {
+      transform: scale(1.1);
+    }
+  
+    .chat-popup {
+      font-family: 'Montserrat', sans-serif;
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      border: 2px solid #f1f1f1;
+      background-color: white;
+      z-index: 9;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease-out;
+    }
+  
+    .chat-header {
+      background-color: #0084ff;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      text-align: center;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+  
+    .chat-body {
+      padding: 15px;
+      max-height: 250px;
+      overflow-y: auto;
+      background-color: #fafafa;
+      border-bottom: 2px solid #f1f1f1;
+    }
+  
+    .chat-footer {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+  
+    .action-button {
+      background-color: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+      margin: 5px 0;
+      transition: background-color 0.3s ease;
+    }
+  
+    .action-button:hover {
+      background-color: #006bb3;
+    }
+  
+    .close-chat {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 20px;
+    }
+  
+    /* Mind Map Styles */
+    .mind-map-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+  
+    .node {
+      position: absolute;
+      padding: 12px;
+      background-color: #f1f1f1;
+      border-radius: 6px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+  
+    .node:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+    }
+  
+    .line {
+      position: absolute;
+      background-color: #0084ff;
+      height: 2px;
+    }
+  
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .tab {
+        flex-direction: column;
+        gap: 10px;
+      }
+  
+      .tablinks {
+        width: 100%;
+        padding: 15px;
+      }
+  
+      .chat-popup {
+        width: 100%;
+        bottom: 10px;
+        right: 0;
+        left: 0;
+      }
+  
+      .chat-body {
+        max-height: 200px;
+      }
+    }
+  
+    /* Animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    #summaryContent {
+    background-color: #f9f9f9; /* Light background color */
+    padding: 20px; /* Add padding for spacing */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    font-family: Arial, sans-serif; /* Clean font choice */
+    max-width: 800px; /* Center alignment width limit */
+    margin: 20px auto; /* Center on the page */
+    color: #333; /* Dark text color for readability */
+}
+
+.button-wrapper {
+    background-color: #f9f9f9; /* Match background with summary content */
+    padding: 20px; /* Same padding as summary content */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Same shadow */
+    max-width: 800px; /* Match max-width of summary content */
+    margin: 20px auto; /* Center on the page */
+    display: flex; /* Flex layout for buttons */
+    justify-content: center; /* Center align buttons within wrapper */
+    gap: 10px; /* Space between buttons */
+}
+button {
+    font-size: 1rem; /* Base font size */
+    padding: 10px 15px; /* Button padding */
+    margin: 10px 5px; /* Margin between buttons */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+}
+
+.speak-button {
+    background-color: #4CAF50; /* Green color for speak */
+    color: white; /* White text color */
+}
+
+.speak-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+.pause-button {
+    background-color: #f0ad4e; /* Orange color for pause */
+    color: white;
+}
+
+.pause-button:hover {
+    background-color: #ec971f; /* Darker orange on hover */
+}
+
+.stop-button {
+    background-color: #d9534f; /* Red color for stop */
+    color: white;
+}
+
+.stop-button:hover {
+    background-color: #c9302c; /* Darker red on hover */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 600px) {
+    button {
+        font-size: 0.9rem; /* Adjust font size for mobile */
+        padding: 8px 12px; /* Adjust padding for mobile */
+    }
+}
+.Transcript-items {
+    display: flex; /* Arrange items in a row */
+    align-items: flex-start; /* Align items to the top */
+    gap: 10px; /* Space between time and text */
+    padding: 15px; /* Space around the content */
+    border-bottom: 1px solid #e0e0e0; /* Divider line between items */
+    font-family: Arial, sans-serif; /* Clean font choice */
+    background-color: #f9f9f9; /* Light background color */
+}
+
+#time {
+    font-weight: bold; /* Bold font for time */
+    color: #4CAF50; /* Green color for time */
+    min-width: 80px; /* Fixed width for alignment */
+    text-align: right; /* Right-align the time */
+    padding-right: 10px; /* Space between time and text */
+}
+
+#text {
+    flex-grow: 1; /* Text takes up remaining space */
+    color: #333; /* Dark text color for readability */
+}
+
+#text p {
+    margin: 0; /* Remove default paragraph margin */
+    line-height: 1.6; /* Improve readability */
+}
+
+/* Hover effect for each transcript item */
+.Transcript-items:hover {
+    background-color: #e9f5e9; /* Light green highlight on hover */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 600px) {
+    .Transcript-items {
+        flex-direction: column; /* Stack items vertically on mobile */
+        padding: 10px; /* Adjust padding for smaller screens */
+    }
+    
+    #time {
+        text-align: left; /* Align time to the left */
+        min-width: auto; /* Allow flexible width */
+        padding-right: 0; /* Remove right padding */
+    }
+}
+.video-info-des {
+    font-size: 1.1rem; /* Slightly larger text for readability */
+    color: #333; /* Dark color for contrast */
+    margin-bottom: 15px; /* Space below description */
+    padding: 10px; /* Padding around the text */
+    background-color: #f9f9f9; /* Light background color */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+.video-embed {
+    display: flex;
+    justify-content: center; /* Center video in container */
+    align-items: center;
+    padding: 20px; /* Padding around the video */
+    background-color: #000; /* Black background for video area */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly larger shadow for depth */
+    max-width: 800px; /* Limit width of video area */
+    margin: 0 auto; /* Center container on page */
+}
+
+#player {
+    width: 100%; /* Full width within container */
+    max-width: 750px; /* Max width for player */
+    height: 420px; /* Set height for iframe or video */
+    border-radius: 8px; /* Rounded corners on video */
+    border: none; /* Remove iframe border */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .video-info-des {
+        font-size: 1rem; /* Smaller text for mobile */
+    }
+
+    .video-embed {
+        padding: 15px; /* Adjust padding for smaller screens */
+    }
+
+    #player {
+        height: 280px; /* Adjust height for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    #player {
+        height: 220px; /* Further adjust height for mobile */
+    }
+}
+
+
+  </style>
+  
+</head>
+<body>
+  <nav>
+    <div class="logo">
+      <a href="/">
+        <img src="{{ url_for('static', filename='main_logo.png') }}" alt="My Logo">
+      </a>
+    </div>
+    <ul class="menu">
+      <li><a href="/home">Home</a></li>
+    </ul>
+  </nav>
+
+  <div class="body-content">
+    <div class="tab">
+      <button class="tablinks" onclick="openCity(event, 'Summarize')" id="defaultOpen">Summarize</button>
+      <button class="tablinks" onclick="openCity(event, 'Transcript')">Transcript</button>
+      <button class="tablinks" onclick="openCity(event, 'VideoInfo')">VideoInfo</button>
+      
+    </div>
+
+    <div id="Summarize" class="tabcontent">
+      <div id="summaryContent"></div>
+      <div class="button-wrapper">
+        <button class="speak-button" onclick="speakSummary()">🔊 Speak</button>
+        <button class="pause-button" onclick="togglePauseResume()">⏸️ Pause</button>
+        <button class="stop-button" onclick="stopSpeaking()">🛑 Stop</button>
+    </div>
+     
+    </div>
+
+    <div id="Transcript" class="tabcontent">
+      {% for key, value in transct.items() %}
+      <div class="Transcript-items">
+        <span id="time">{{ key }}</span>
+        <span id="text"><p>{{ value }}</p></span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="VideoInfo" class="tabcontent">
+     
+      {% if video_info is mapping %}
+      <div class="video-embed">
+        {% if video_info.Title %}
+          {% if embed_link.startswith("http://") or embed_link.startswith("https://") %}
+            <iframe id="player" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay..." title="{{ video_info.title }}" src="{{ embed_link }}"></iframe>
+          {% else %}
+            <video id="player" controls>
+              <source src="{{ url_for('static', filename=embed_link) }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          {% endif %}
+          
+        {% else %}
+          <p>No video information available.</p>
+        {% endif %}
+      </div>
+
+      <div class="video-details">
+        <h3>Video Details</h3>
+        {% for key, value in video_info.items() %}
+          <p><strong>{{ key }}:</strong> {{ value }}</p>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p>{{ video_info }}</p>
+      {% endif %}
+    </div>
+    
+    
+    
+  </div>
+
+  <!-- Chat Button -->
+  <button class="chat-button" onclick="openChat()">💬 AI Chat</button>
+
+  <!-- Chat Popup -->
+  <div class="chat-popup" id="chatPopup">
+    <div class="chat-header">
+      AI Chatbot
+      <span class="close-chat" onclick="closeChat()">×</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <p>Welcome! How can I assist you today?</p>
+    </div>
+    <div class="chat-footer">
+     
+      <div class="action-buttons">
+        <button class="action-button" onclick="processAction('extract_keywords')">Extract Keywords</button>
+        <button class="action-button" onclick="processAction('generate_mcqs')">Generate MCQs</button>
+        <button class="action-button" onclick="processAction('summarize_faqs')">Summarize FAQs</button>
+        <button class="action-button" onclick="processAction('extract_outline')">Extract Outline</button>
+        <button class="action-button" onclick="processAction('generate_notes')">Generate Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmind/0.4.0/jsmind.js"></script>
+  <script>
+    var summaryMarkdown = `{{ summaryv2 }}`;
+    function renderMarkdown(markdown) {
+      try {
+        var md = window.markdownit();
+        return md.render(markdown);
+      } catch (error) {
+        console.error('Error rendering markdown:', error);
+        return '<p>Error rendering markdown content.</p>';
+      }
+    }
+
+    var summaryElement = document.getElementById('summaryContent');
+    if (summaryElement) {
+      summaryElement.innerHTML = renderMarkdown(summaryMarkdown);
+    }
+
+    // Tab functionality
+    document.getElementById("defaultOpen").click();
+    function openCity(evt, cityName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(cityName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    // Chat functionality
+function openChat() {
+  document.getElementById("chatPopup").style.display = "block";
+}
+
+function closeChat() {
+  document.getElementById("chatPopup").style.display = "none";
+}
+
+function handleKeyPress(event) {
+  if (event.key === "Enter") {
+    var chatInput = document.getElementById('chatInput');
+    var message = chatInput.value.trim();
+    if (message) {
+      appendMessage("You", message);
+      chatInput.value = "";  // Clear input field
+      processAction(message);  // Pass the user input to processAction
+    }
+  }
+}
+
+function appendMessage(sender, message) {
+  var chatBody = document.getElementById('chatBody');
+  var messageElement = document.createElement('p');
+  messageElement.textContent = sender + ": " + message;
+  chatBody.appendChild(messageElement);
+  chatBody.scrollTop = chatBody.scrollHeight;  // Scroll to the bottom
+}
+
+function processAction(userInput) {
+  // Show processing message immediately
+  appendMessage("AI", "I'm processing your request...");
+
+  // Fetch action from the server
+  fetch('/process_action', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ action: userInput })  // Use user input directly
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Handle the response based on the data structure
+    if (data.message) {
+    if (data.message.keywords) {
+        // Handle extracted keywords
+        appendMessage("AI", "Extracted Keywords: " + data.message.keywords.join(', '));
+        
+        // Handle question-answer pairs
+        data.message.qa_pairs.forEach(pair => {
+            appendMessage("AI", pair.question); // Question on one line
+            appendMessage("AI", pair.answer); // Answer on the next line
+        });
+    } else if (Array.isArray(data.message)) { // Check if message is an array
+        // Handle multiple-choice questions
+        appendMessage("AI", "Generated Multiple-Choice Questions:");
+        
+        // Loop through each question object in the message array
+        data.message.forEach(mcq => {
+            appendMessage("AI", mcq.question); // Display the question
+            
+            // Display options as A, B, C, D
+            const optionsDisplay = mcq.options.join(', '); // Join options with commas
+            appendMessage("AI", "Options: " + optionsDisplay); // Display options
+            
+            appendMessage("AI", "Correct Answer: " + mcq.correct_answer); // Display correct answer
+            appendMessage("AI", "-------------------------"); // Separator for readability
+        });
+    } else {
+        appendMessage("AI", data.message); // Fallback if no keywords or MCQs
+    }
+} else {
+    appendMessage("AI", "Sorry, there was an error processing your request.");
+}
+
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    appendMessage("AI", "Sorry, there was an error processing your request.");
+  });
+}
+// Text-to-Speech Functionality for Summarize Tab
+let utterance;
+    let isPaused = false;
+
+    function speakSummary() {
+      const summaryText = document.getElementById('summaryContent').innerText;
+      if ('speechSynthesis' in window) {
+        if (utterance && (speechSynthesis.speaking || speechSynthesis.paused)) {
+          speechSynthesis.cancel();  // Stop any ongoing or paused speech
+        }
+        utterance = new SpeechSynthesisUtterance(summaryText);
+        utterance.lang = 'en-US';  // Set language
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert('Text-to-Speech is not supported in this browser.');
+      }
+    }
+
+    function stopSpeaking() {
+      if ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.paused)) {
+        window.speechSynthesis.cancel();  // Stop speech
+      }
+      isPaused = false;
+      updatePauseButton();
+    }
+
+    function togglePauseResume() {
+      if ('speechSynthesis' in window) {
+        if (speechSynthesis.speaking && !speechSynthesis.paused) {
+          // Pause the speech
+          speechSynthesis.pause();
+          isPaused = true;
+        } else if (speechSynthesis.paused) {
+          // Resume the speech
+          speechSynthesis.resume();
+          isPaused = false;
+        }
+      }
+      updatePauseButton();
+    }
+
+    function updatePauseButton() {
+      const pauseButton = document.querySelector('.pause-button');
+      pauseButton.innerHTML = isPaused ? '▶️ Resume' : '⏸️ Pause';
+    }
+  </script>
+</body>
+</html>

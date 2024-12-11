@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico')}}">
+    <script src="https://cdn.jsdelivr.net/npm/@lottiefiles/lottie-player"></script>
+    <style>
+        @font-face {
+            font-family: 'Sriracha';
+            src: url('/static/Sriracha-Regular.ttf');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fad0c4, #ff9a9e);
+            font-family: 'Sriracha', cursive;
+            color: #4A4A4A;
+        }
+
+        #container {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 20px 30px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #gifContainer {
+            width: 200px;
+            margin-right: 30px;
+        }
+
+        #textContainer {
+            font-size: 18px;
+            max-width: 400px;
+            color: #333;
+            line-height: 1.6;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        #loader {
+            width: 100%;
+            max-width: 200px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="gifContainer">
+            <lottie-player id="loader" src="{{ url_for('static', filename='loading.json') }}" autoplay loop></lottie-player>
+        </div>
+        <div id="textContainer">
+            <h2>Data fetching may take a little time, please bear with us...</h2>
+        </div>
+    </div>
+
+    <script>
+        var videoUrl = "{{ videoUrl }}";
+        window.addEventListener("load", function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/process_video?videoUrl=" + encodeURIComponent(videoUrl), true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    window.location.href = "/summarize";
+                }
+            };
+            xhr.send("value=" + encodeURIComponent(window.location.search.substring(1)));
+        });
+    </script>
+
+    <script>
+        var textArray = [
+            "<p>Initiating video transcription retrieval, please hold on for a moment...</p>",
+            "<p>Employing RAG for extracting relevant information, your patience is appreciated...</p>",
+            "<p>Finalizing summary generation with GPT-3, almost there, thank you for waiting...</p>"
+        ];
+
+        function displayTextWithInterval() {
+            var textContainer = document.getElementById("textContainer");
+            var index = 0;
+            textContainer.innerHTML = textArray[index];
+
+            var intervalId = setInterval(function() {
+                index++;
+                if (index < textArray.length) {
+                    textContainer.innerHTML = textArray[index];
+                } else {
+                    clearInterval(intervalId);
+                }
+            }, 4000);
+        }
+
+        displayTextWithInterval();
+    </script>
+</body>
+</html>
